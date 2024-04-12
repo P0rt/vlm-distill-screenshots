@@ -1,0 +1,30 @@
+# Distillation hyperparameters (SPEC §3).
+# Each distillation signal is gated by a flag so we can run clean ablations (Phase 7).
+
+# (1) Response-based KD — the MVP signal (Phase 4).
+#     L = alpha * CE(hard) + (1 - alpha) * KL(student/T || teacher/T) * T^2
+use_response_kd: true
+alpha: 0.5
+temperature: 2.0
+cache_teacher_logits: true
+top_k_logits: 64
+
+# (2) Feature-based alignment of vision features — ablation (Phase 7).
+feature_loss:
+  enabled: false
+  kind: cosine          # cosine | mse
+  weight: 1.0
+  teacher_layers: []
+  student_layers: []
+
+# (3) Self-distillation: train on teacher-labeled RICO screenshots — ablation (Phase 7).
+use_synthetic_data: false
+
+# Optimization.
+learning_rate: 1.0e-4
+batch_size: 4
+gradient_accumulation_steps: 4
+num_epochs: 3
+warmup_ratio: 0.03
+seed: 42
+max_steps: null

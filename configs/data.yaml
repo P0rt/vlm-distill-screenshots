@@ -1,0 +1,21 @@
+# Data configuration (SPEC §2). Concrete dataset IDs are finalized in Phase 2.
+screen2words_id: rootsautomation/ScreenSpot   # placeholder, revisited in Phase 2
+rico_id: rico
+
+data_dir: data
+processed_dir: data/processed
+
+# Single source of truth for the task prompt (SPEC §2). The teacher is prompted
+# with this, and the student is trained to reproduce the teacher's answer.
+prompt_template: >-
+  Describe this UI screenshot in one sentence, then list the key interface
+  elements as a comma-separated list.
+
+max_target_length: 256
+
+# Deterministic train/val/test split (fixed seed, SPEC §8).
+split:
+  train: 0.9
+  val: 0.05
+  test: 0.05
+  seed: 42

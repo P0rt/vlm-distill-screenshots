@@ -1,0 +1,18 @@
+# Student VLM configuration (SPEC §2).
+# Default student: Qwen2-VL-2B-Instruct, fine-tuned with LoRA (~3.5x smaller than teacher).
+model_id: Qwen/Qwen2-VL-2B-Instruct
+dtype: bfloat16
+
+lora:
+  enabled: true
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj]
+
+# Backup architecture: frozen SigLIP vision encoder + small Qwen2.5-0.5B decoder
+# with a trainable projection bridge. Disabled by default.
+fallback:
+  enabled: false
+  vision_model_id: google/siglip-so400m-patch14-384
+  decoder_model_id: Qwen/Qwen2.5-0.5B

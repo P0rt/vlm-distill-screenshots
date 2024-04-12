@@ -1,0 +1,22 @@
+# Teacher VLM configuration (SPEC §2).
+# Default teacher: Qwen2-VL-7B-Instruct, loaded in 4-bit on a 24GB GPU.
+model_id: Qwen/Qwen2-VL-7B-Instruct
+
+# Documented alternatives — not wired into code yet (Phase 7 ablation candidates).
+alternatives:
+  - llava-hf/llava-v1.6-mistral-7b-hf
+  - OpenGVLab/InternVL2-8B
+
+load_in_4bit: true
+dtype: bfloat16
+device_map: auto
+
+# Qwen2-VL visual token budget (pixels). Lower max_pixels -> fewer tokens, faster.
+min_pixels: 200704      # 256 * 28 * 28
+max_pixels: 1003520     # 1280 * 28 * 28
+
+generation:
+  max_new_tokens: 256
+  do_sample: false
+  temperature: 1.0
+  top_p: 1.0

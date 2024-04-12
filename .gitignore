@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Environments
+.venv/
+.env
+
+# Tooling caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Large artifacts — never commit weights / datasets / run outputs
+results/
+data/
+wandb/
+*.parquet
+*.arrow
+*.onnx
+*.safetensors
+*.bin
+checkpoints/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
