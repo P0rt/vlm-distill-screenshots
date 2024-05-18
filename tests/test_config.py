@@ -30,6 +30,9 @@ def test_default_configs_load_from_disk() -> None:
     assert student.lora.enabled is True
     assert distill.use_response_kd is True
     assert 0.0 <= distill.alpha <= 1.0
+    assert data.dataset_id == "rootsautomation/RICO-Screen2Words"
+    assert data.use_native_splits is True
+    assert data.max_references == 5
     assert data.split.train + data.split.val + data.split.test == pytest.approx(1.0)
 
 

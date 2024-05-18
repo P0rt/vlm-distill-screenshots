@@ -120,9 +120,13 @@ class SplitConfig(_StrictModel):
 class DataConfig(_StrictModel):
     """Datasets, paths, prompt template, and split configuration."""
 
-    screen2words_id: str = "rootsautomation/ScreenSpot"  # placeholder; finalized in Phase 2
-    rico_id: str = "rico"
+    # Screen2Words captions bundled with their RICO screenshots (CC-BY-4.0).
+    # Native splits: train 15700 / val 2360 / test 4310.
+    dataset_id: str = "rootsautomation/RICO-Screen2Words"
+    # RICO source for teacher-labeled augmentation (Phase 7); unused in Phase 2.
+    rico_id: str = "rootsautomation/RICO-Screen2Words"
     data_dir: str = "data"
+    raw_dir: str = "data/raw"
     processed_dir: str = "data/processed"
     # Single source of truth for the task prompt (SPEC §2).
     prompt_template: str = (
@@ -130,6 +134,11 @@ class DataConfig(_StrictModel):
         "elements as a comma-separated list."
     )
     max_target_length: int = 256
+    # Number of human reference captions to keep per screen (for eval metrics).
+    max_references: int = 5
+    # Use the dataset's native train/val/test splits. When False, fall back to a
+    # deterministic hash-based split (used for combined / synthetic corpora).
+    use_native_splits: bool = True
     split: SplitConfig = Field(default_factory=SplitConfig)
 
 

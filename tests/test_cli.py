@@ -13,7 +13,8 @@ import pytest
 
 from vlm_distill.cli import PhaseNotImplementedError
 
-ENTRYPOINTS = [
+# Every entrypoint must parse --help with no heavy deps.
+ALL_ENTRYPOINTS = [
     "vlm_distill.data.download",
     "vlm_distill.data.build_dataset",
     "vlm_distill.data.teacher_label",
@@ -23,8 +24,18 @@ ENTRYPOINTS = [
     "vlm_distill.export",
 ]
 
+# Entrypoints still scaffolded (their phase hasn't landed). data.download and
+# data.build_dataset are implemented in Phase 2 and excluded here.
+NOT_IMPLEMENTED_ENTRYPOINTS = [
+    "vlm_distill.data.teacher_label",
+    "vlm_distill.train",
+    "vlm_distill.eval",
+    "vlm_distill.benchmark",
+    "vlm_distill.export",
+]
 
-@pytest.mark.parametrize("module_name", ENTRYPOINTS)
+
+@pytest.mark.parametrize("module_name", ALL_ENTRYPOINTS)
 def test_help_exits_zero(module_name: str) -> None:
     module = importlib.import_module(module_name)
     with pytest.raises(SystemExit) as exc:
@@ -32,7 +43,7 @@ def test_help_exits_zero(module_name: str) -> None:
     assert exc.value.code == 0
 
 
-@pytest.mark.parametrize("module_name", ENTRYPOINTS)
+@pytest.mark.parametrize("module_name", NOT_IMPLEMENTED_ENTRYPOINTS)
 def test_main_raises_phase_not_implemented(module_name: str) -> None:
     module = importlib.import_module(module_name)
     with pytest.raises(PhaseNotImplementedError):

@@ -1,8 +1,11 @@
-# Data configuration (SPEC §2). Concrete dataset IDs are finalized in Phase 2.
-screen2words_id: rootsautomation/ScreenSpot   # placeholder, revisited in Phase 2
-rico_id: rico
+# Data configuration (SPEC §2).
+# Screen2Words captions bundled with RICO screenshots (CC-BY-4.0).
+# Native splits: train 15700 / val 2360 / test 4310 (total 22417).
+dataset_id: rootsautomation/RICO-Screen2Words
+rico_id: rootsautomation/RICO-Screen2Words   # source for Phase 7 augmentation
 
 data_dir: data
+raw_dir: data/raw
 processed_dir: data/processed
 
 # Single source of truth for the task prompt (SPEC §2). The teacher is prompted
@@ -12,8 +15,12 @@ prompt_template: >-
   elements as a comma-separated list.
 
 max_target_length: 256
+max_references: 5
 
-# Deterministic train/val/test split (fixed seed, SPEC §8).
+# Use the dataset's native train/val/test splits (scientifically comparable to
+# the literature). When false, fall back to the deterministic hash-based split
+# below (used for combined / synthetic corpora in Phase 7).
+use_native_splits: true
 split:
   train: 0.9
   val: 0.05

@@ -15,16 +15,18 @@ dist/
 .mypy_cache/
 .pytest_cache/
 
-# Large artifacts — never commit weights / datasets / run outputs
-results/
-data/
-wandb/
+# Large artifacts — never commit weights / datasets / run outputs.
+# Anchored to repo root so they don't shadow the src package (e.g. the
+# `src/vlm_distill/data/` directory must NOT be ignored).
+/results/
+/data/
+/wandb/
+/checkpoints/
 *.parquet
 *.arrow
 *.onnx
 *.safetensors
 *.bin
-checkpoints/
 
 # OS / editor
 .DS_Store

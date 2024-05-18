@@ -16,16 +16,22 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Heavy ML stack. Install with: `uv sync --extra ml` (needs a GPU box for real runs).
+# Data stack (Phase 2): lightweight, no torch. `uv sync --extra data`.
+data = [
+    "datasets>=2.20",
+    "pillow>=10.0",
+    "numpy>=1.26",
+    "pyarrow>=16.0",
+    "huggingface-hub>=0.24",
+]
+# Heavy ML stack (Phases 3-8). `uv sync --extra ml` (needs a GPU box for real runs).
 ml = [
+    "vlm-distill-screenshots[data]",
     "torch>=2.3",
     "transformers>=4.45",
-    "datasets>=2.20",
     "accelerate>=0.33",
     "peft>=0.12",
     "bitsandbytes>=0.43; platform_system == 'Linux'",
-    "pillow>=10.0",
-    "numpy>=1.26",
     "wandb>=0.17",
     "qwen-vl-utils>=0.0.8",
     "evaluate>=0.4",
@@ -92,6 +98,7 @@ files = ["src"]
 module = [
     "torch.*",
     "PIL.*",
+    "datasets.*",
 ]
 ignore_missing_imports = true
 
