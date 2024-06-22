@@ -24,7 +24,13 @@ data = [
     "pyarrow>=16.0",
     "huggingface-hub>=0.24",
 ]
-# Heavy ML stack (Phases 3-8). `uv sync --extra ml` (needs a GPU box for real runs).
+# Apple Silicon inference backend (Phase 3+): teacher/student via MLX.
+# `uv sync --extra mlx`. Only installs on macOS arm64.
+mlx = [
+    "vlm-distill-screenshots[data]",
+    "mlx-vlm>=0.6; sys_platform == 'darwin' and platform_machine == 'arm64'",
+]
+# Heavy CUDA ML stack (Phases 3-8). `uv sync --extra ml` (needs a GPU box).
 ml = [
     "vlm-distill-screenshots[data]",
     "torch>=2.3",
@@ -99,8 +105,15 @@ module = [
     "torch.*",
     "PIL.*",
     "datasets.*",
+    "transformers.*",
+    "mlx_vlm.*",
 ]
 ignore_missing_imports = true
+# Treat these optional deps as untyped (Any) whether or not they are installed,
+# so `mypy src` behaves identically in CI (deps absent) and on a dev box with
+# the `ml`/`mlx` extras installed (deps present but flagged as untyped calls).
+follow_imports = "skip"
+follow_imports_for_stubs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -34,9 +34,20 @@ class GenerationConfig(_StrictModel):
 
 
 class TeacherConfig(_StrictModel):
-    """Teacher VLM (default: Qwen2-VL-7B-Instruct, loaded in 4-bit)."""
+    """Teacher VLM (default: Qwen2-VL-7B-Instruct, loaded in 4-bit).
 
+    Two inference backends:
+      - ``mlx``: Apple Silicon, via mlx-vlm + a 4-bit MLX checkpoint
+        (``mlx_model_id``). Runs on this project's dev machine (M-series, 24GB).
+      - ``hf``: CUDA, via transformers + bitsandbytes 4-bit (``model_id``).
+        For the rented-GPU labeling run.
+    """
+
+    backend: Literal["mlx", "hf"] = "mlx"
+    # HF checkpoint (used by the `hf` backend and as the canonical model id).
     model_id: str = "Qwen/Qwen2-VL-7B-Instruct"
+    # MLX 4-bit checkpoint (used by the `mlx` backend).
+    mlx_model_id: str = "mlx-community/Qwen2-VL-7B-Instruct-4bit"
     # Alternatives are documented but not wired up in code yet (see SPEC §2).
     alternatives: list[str] = Field(
         default_factory=lambda: ["llava-hf/llava-v1.6-mistral-7b-hf", "OpenGVLab/InternVL2-8B"]

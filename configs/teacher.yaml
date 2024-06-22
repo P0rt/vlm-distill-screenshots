@@ -1,6 +1,12 @@
 # Teacher VLM configuration (SPEC §2).
-# Default teacher: Qwen2-VL-7B-Instruct, loaded in 4-bit on a 24GB GPU.
+# Default teacher: Qwen2-VL-7B-Instruct in 4-bit.
+#
+# backend:
+#   mlx -> Apple Silicon (mlx-vlm + mlx_model_id). Default for the dev machine.
+#   hf  -> CUDA (transformers + bitsandbytes 4-bit + model_id). Rented-GPU run.
+backend: mlx
 model_id: Qwen/Qwen2-VL-7B-Instruct
+mlx_model_id: mlx-community/Qwen2-VL-7B-Instruct-4bit
 
 # Documented alternatives — not wired into code yet (Phase 7 ablation candidates).
 alternatives:
@@ -16,7 +22,7 @@ min_pixels: 200704      # 256 * 28 * 28
 max_pixels: 1003520     # 1280 * 28 * 28
 
 generation:
-  max_new_tokens: 256
+  max_new_tokens: 128   # screenshot descriptions are short; caps teacher latency
   do_sample: false
   temperature: 1.0
   top_p: 1.0

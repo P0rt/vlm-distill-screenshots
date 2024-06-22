@@ -35,9 +35,7 @@ def _normalize_split(ds: Dataset, cfg: DataConfig, native_split: str) -> Dataset
     """Map a raw split to the unified schema, keeping the image column."""
 
     def _map(example: dict[str, Any]) -> dict[str, Any]:
-        rec = build_record(
-            example, prompt=cfg.prompt_template, max_references=cfg.max_references
-        )
+        rec = build_record(example, prompt=cfg.prompt_template, max_references=cfg.max_references)
         if cfg.use_native_splits:
             rec["split"] = native_split
         else:
@@ -53,9 +51,8 @@ def _normalize_split(ds: Dataset, cfg: DataConfig, native_split: str) -> Dataset
 
 def _build_synthetic() -> DatasetDict:
     """Tiny in-memory dataset for --dry-run graph validation (no network)."""
-    from datasets import Dataset, DatasetDict, Features
+    from datasets import Dataset, DatasetDict, Features, Sequence, Value
     from datasets import Image as HfImage
-    from datasets import Sequence, Value
     from PIL import Image as PILImage
 
     def _img(color: tuple[int, int, int]) -> PILImage.Image:
@@ -94,9 +91,7 @@ def _load_raw(cfg: DataConfig, *, limit: int | None, dry_run: bool) -> DatasetDi
     # No `split=` -> returns a DatasetDict with all native splits (train/val/test).
     raw = load_dataset(cfg.dataset_id, cache_dir=cfg.raw_dir)
     if limit is not None:
-        raw = DatasetDict(
-            {name: ds.select(range(min(limit, len(ds)))) for name, ds in raw.items()}
-        )
+        raw = DatasetDict({name: ds.select(range(min(limit, len(ds)))) for name, ds in raw.items()})
     return raw
 
 
@@ -135,9 +130,7 @@ def build_dataset(
     from datasets import DatasetDict
 
     raw = _load_raw(cfg, limit=limit, dry_run=dry_run)
-    unified = DatasetDict(
-        {name: _normalize_split(ds, cfg, name) for name, ds in raw.items()}
-    )
+    unified = DatasetDict({name: _normalize_split(ds, cfg, name) for name, ds in raw.items()})
 
     out_dir = Path(cfg.processed_dir + ("_dryrun" if dry_run else ""))
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -146,7 +139,8 @@ def build_dataset(
     # Stats over text columns only (avoid decoding images).
     records: list[dict[str, Any]] = []
     for ds in unified.values():
-        records.extend(ds.select_columns([c for c in _TEXT_COLUMNS if c in ds.column_names]).to_list())
+        cols = [c for c in _TEXT_COLUMNS if c in ds.column_names]
+        records.extend(ds.select_columns(cols).to_list())
     stats = compute_stats(records)
 
     cfg_hash = config_hash(cfg)

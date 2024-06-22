@@ -25,6 +25,8 @@ def test_default_configs_load_from_disk() -> None:
     data = load_data()
 
     assert teacher.model_id == "Qwen/Qwen2-VL-7B-Instruct"
+    assert teacher.backend == "mlx"
+    assert teacher.mlx_model_id == "mlx-community/Qwen2-VL-7B-Instruct-4bit"
     assert teacher.load_in_4bit is True
     assert student.model_id == "Qwen/Qwen2-VL-2B-Instruct"
     assert student.lora.enabled is True

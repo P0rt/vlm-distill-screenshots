@@ -8,9 +8,9 @@ the central question is *how much quality we trade for how much speedup*. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for working
 conventions.
 
-> **Status:** Phase 1 (skeleton & infra) complete. Phases 2–8 are scaffolded —
-> every entrypoint exists and raises a clear "not implemented yet" pointing at
-> the phase that will land it.
+> **Status:** Phases 1–3 complete (skeleton, data pipeline, teacher labeling).
+> Phases 4–8 are scaffolded — every entrypoint exists and raises a clear "not
+> implemented yet" pointing at the phase that will land it.
 
 ## Models
 
@@ -60,7 +60,13 @@ uv sync
 uv run pytest
 uv run ruff check . && uv run mypy src
 
-# Add the heavy ML stack (torch/transformers/...). Needs a GPU box for real runs.
+# Data stack only (Phase 2): datasets/pillow/pyarrow, no torch.
+uv sync --extra data
+
+# Apple Silicon inference (Phase 3+): MLX backend for the teacher/student.
+uv sync --extra mlx
+
+# Heavy CUDA stack (transformers + bitsandbytes 4-bit). Needs a GPU box.
 uv sync --extra ml
 ```
 
@@ -83,6 +89,45 @@ uv run vlm-eval              # Phase 5  — CIDEr / ROUGE-L / BLEU + LLM-as-judg
 uv run vlm-benchmark         # Phase 6  — latency / throughput / peak VRAM
 uv run vlm-export            # Phase 8  — ONNX export + sanity check
 ```
+
+## Teacher labeling (Phase 3)
+
+The teacher (Qwen2-VL-7B, 4-bit) generates the distillation targets for the
+train split. Two interchangeable backends (set `backend` in `configs/teacher.yaml`):
+
+| backend | runs on | how |
+| ------- | ------- | --- |
+| `mlx`   | Apple Silicon (M-series) | `mlx-vlm` + `mlx-community/Qwen2-VL-7B-Instruct-4bit` |
+| `hf`    | CUDA GPU (~24GB) | `transformers` + `bitsandbytes` 4-bit |
+
+```bash
+uv run vlm-teacher-label --limit 200     # label first 200 train screens
+uv run vlm-teacher-label                 # full train split
+uv run vlm-teacher-label --dry-run       # no model, no network (CI smoke)
+```
+
+Output is **versioned by config hash** and **resumable / idempotent** — a
+re-run skips already-labeled ids, so an interrupted run just continues:
+
+```text
+results/teacher_labels/<config_hash>/
+    train.jsonl     # {id, prompt, teacher_target, valid, words, model, source}
+    manifest.json   # config hash, backend, model, counts, timing
+```
+
+Teacher outputs get a light post-validation (whitespace normalized; empty /
+too-short outputs flagged `valid: false`) to mitigate format drift.
+
+<!-- TEACHER_LABELING_STATS:BEGIN -->
+Measured run — Qwen2-VL-7B-Instruct-4bit via MLX on an Apple M4 Pro (24GB),
+`max_new_tokens=128`, 200 train screenshots:
+
+- **Throughput:** ~10.2 s/screenshot (≈34 min for 200; ≈2.7 h projected for the full 15.7k train split)
+- **Quality:** 0/200 flagged invalid; mean target length 33.6 words (5–77)
+- Targets follow the requested format (one-sentence summary + key-element list)
+
+Example target: _"The UI screenshot shows a fitness app displaying an exercise called 'Lunges,' with a progress indicator showing 30% complete. Key interface elements include a progress bar, a figure performing the exercise, and the text 'Lunges.'"_
+<!-- TEACHER_LABELING_STATS:END -->
 
 ## Configuration
 
