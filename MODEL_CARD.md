@@ -59,6 +59,15 @@ after only a short PoC training run.
 
 → **~2.4× faster, ~2.4× less memory, 3.75× fewer parameters.**
 
+![Quality vs speed](https://raw.githubusercontent.com/P0rt/vlm-distill-screenshots/main/assets/quality_vs_speed.png)
+
+![Quality vs memory](https://raw.githubusercontent.com/P0rt/vlm-distill-screenshots/main/assets/quality_vs_memory.png)
+
+> Note: against the *short* human references (median 7 words), ROUGE-L/BLEU
+> undersell the verbose teacher — the 7B teacher actually scores **lower** on
+> ROUGE-L (0.164) than the distilled student (0.178). LLM-as-judge / CIDEr would
+> reward content over brevity-matching; the unambiguous win here is efficiency.
+
 ## Usage
 
 ```python
