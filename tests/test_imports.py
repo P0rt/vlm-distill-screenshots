@@ -16,6 +16,7 @@ MODULES = [
     "vlm_distill.data.teacher_label",
     "vlm_distill.data.splits",
     "vlm_distill.data.normalize",
+    "vlm_distill.data.distill_dataset",
     "vlm_distill.models",
     "vlm_distill.models.teacher",
     "vlm_distill.models.student",

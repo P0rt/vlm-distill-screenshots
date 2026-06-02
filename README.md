@@ -9,8 +9,9 @@ the central question is *how much quality we trade for how much speedup*. See
 conventions.
 
 > **Status:** Phases 1–3 complete (skeleton, data pipeline, teacher labeling).
-> Phases 4–8 are scaffolded — every entrypoint exists and raises a clear "not
-> implemented yet" pointing at the phase that will land it.
+> Phase 4 (distillation) implemented via the `hf` backend — real training runs
+> on a 24GB GPU (the `mlx` training backend is blocked on an upstream mlx-vlm
+> gap). Phases 5–8 scaffolded.
 
 ## Models
 
@@ -128,6 +129,30 @@ Measured run — Qwen2-VL-7B-Instruct-4bit via MLX on an Apple M4 Pro (24GB),
 
 Example target: _"The UI screenshot shows a fitness app displaying an exercise called 'Lunges,' with a progress indicator showing 30% complete. Key interface elements include a progress bar, a figure performing the exercise, and the text 'Lunges.'"_
 <!-- TEACHER_LABELING_STATS:END -->
+
+## Distillation training (Phase 4)
+
+Response-based / **sequence-level KD**: the student (Qwen2-VL-2B + LoRA) is
+trained to reproduce the teacher's text targets. `vlm-train` first joins the
+teacher labels with their screenshots into `{image, question, answer}` records,
+then runs LoRA SFT.
+
+```bash
+uv run vlm-train --dry-run            # no model/deps — validates the graph (CI)
+uv run vlm-train --limit 200          # train on the first 200 labeled screens
+uv run vlm-train                      # full labeled train split
+```
+
+Backends (set `backend` in `configs/student.yaml`):
+
+| backend | runs on | status |
+| ------- | ------- | ------ |
+| `hf`    | CUDA GPU (~24GB), or CPU/MPS smoke | transformers + peft LoRA — the path for real runs |
+| `mlx`   | Apple Silicon | mlx-vlm LoRA SFT — **blocked** on an mlx-vlm 0.6.0 backprop gap (`CustomKernel` has no vjp); inference/labeling on MLX works fine |
+
+Visual tokens per screenshot are capped (`student.yaml` `max_pixels`) so large
+RICO screenshots fit the training context. Adapters are written under
+`results/checkpoints/<config_hash>/`.
 
 ## Configuration
 

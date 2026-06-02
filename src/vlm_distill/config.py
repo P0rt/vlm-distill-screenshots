@@ -81,8 +81,17 @@ class StudentFallbackConfig(_StrictModel):
 class StudentConfig(_StrictModel):
     """Student VLM (default: Qwen2-VL-2B-Instruct, fine-tuned with LoRA)."""
 
+    backend: Literal["mlx", "hf"] = "mlx"
     model_id: str = "Qwen/Qwen2-VL-2B-Instruct"
+    # MLX checkpoint used for training/inference on Apple Silicon (bf16 so LoRA
+    # adapters train in full precision; 4-bit is for inference only).
+    mlx_model_id: str = "mlx-community/Qwen2-VL-2B-Instruct-bf16"
     dtype: str = "bfloat16"
+    # Visual token budget (pixels). Caps how many vision tokens a screenshot
+    # expands into so the sequence fits in max_seq_length during training.
+    # 512 tokens max keeps RICO screenshots well within a 1024+ context.
+    min_pixels: int = 256 * 28 * 28
+    max_pixels: int = 512 * 28 * 28
     lora: LoraConfig = Field(default_factory=LoraConfig)
     fallback: StudentFallbackConfig = Field(default_factory=StudentFallbackConfig)
 
@@ -119,6 +128,10 @@ class DistillConfig(_StrictModel):
     warmup_ratio: float = 0.03
     seed: int = 42
     max_steps: int | None = None
+    # mlx-vlm trainer knobs.
+    max_seq_length: int = 1024
+    steps_per_report: int = 5
+    grad_clip: float = 1.0
 
 
 class SplitConfig(_StrictModel):

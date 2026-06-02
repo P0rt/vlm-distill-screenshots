@@ -107,6 +107,7 @@ module = [
     "datasets.*",
     "transformers.*",
     "mlx_vlm.*",
+    "peft.*",
 ]
 ignore_missing_imports = true
 # Treat these optional deps as untyped (Any) whether or not they are installed,

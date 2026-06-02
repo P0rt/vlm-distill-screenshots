@@ -28,3 +28,7 @@ num_epochs: 3
 warmup_ratio: 0.03
 seed: 42
 max_steps: null
+# mlx-vlm trainer knobs.
+max_seq_length: 1024
+steps_per_report: 5
+grad_clip: 1.0

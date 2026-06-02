@@ -1,7 +1,16 @@
 # Student VLM configuration (SPEC §2).
 # Default student: Qwen2-VL-2B-Instruct, fine-tuned with LoRA (~3.5x smaller than teacher).
+# backend: mlx (Apple Silicon) | hf (CUDA). mlx_model_id is a bf16 MLX checkpoint
+# so LoRA adapters train in full precision.
+backend: mlx
 model_id: Qwen/Qwen2-VL-2B-Instruct
+mlx_model_id: mlx-community/Qwen2-VL-2B-Instruct-bf16
 dtype: bfloat16
+
+# Visual token budget: cap screenshots at <=512 vision tokens so the sequence
+# fits in max_seq_length during LoRA training (RICO screenshots are large).
+min_pixels: 200704     # 256 * 28 * 28
+max_pixels: 401408     # 512 * 28 * 28
 
 lora:
   enabled: true
