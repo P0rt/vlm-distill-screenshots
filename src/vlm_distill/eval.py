@@ -94,8 +94,13 @@ def evaluate(
     limit: int | None = None,
     judge: bool = False,
     dry_run: bool = False,
+    write_outputs: bool = True,
 ) -> dict[str, Any]:
-    """Evaluate the requested models on the test split; returns the report."""
+    """Evaluate the requested models on the test split; returns the report.
+
+    ``write_outputs=False`` skips the results/README side effects (used by the
+    ablation driver so it doesn't clobber the main eval table).
+    """
     examples = list(_iter_test(data_cfg, limit=limit, dry_run=dry_run))
     references = [refs for _, _, refs in examples]
 
@@ -127,12 +132,13 @@ def evaluate(
             metrics["judge_mean"] = round(sum(valid) / len(valid), 3) if valid else None
         report["models"][name] = metrics
 
-    RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "eval.json").write_text(
-        json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    if not dry_run:
-        _update_readme(report)
+    if write_outputs:
+        RESULTS.mkdir(parents=True, exist_ok=True)
+        (RESULTS / "eval.json").write_text(
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        if not dry_run:
+            _update_readme(report)
     return report
 
 

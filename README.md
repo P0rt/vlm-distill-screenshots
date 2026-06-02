@@ -215,6 +215,45 @@ untrained baseline on ROUGE-L (Phase 5). The quality-vs-speed curve will tighten
 with a full training run; the honest read is that distillation already buys a
 real efficiency win at a modest, measurable quality cost.
 
+## Ablations (Phase 7)
+
+What actually moves quality? We vary the axes our sequence-level SFT exposes —
+training **steps** and **LoRA rank** — at fixed lr/batch/data, and eval each on
+the test split:
+
+```bash
+PYTORCH_ENABLE_MPS_FALLBACK=1 uv run python scripts/run_ablations.py
+```
+
+<!-- ABLATIONS:BEGIN -->
+| run | LoRA r | steps | ROUGE-L | BLEU |
+| --- | --- | --- | --- | --- |
+| baseline (0 steps) | 8 | 0 | 0.1516 | 0.0170 |
+| r8, 40 steps | 8 | 40 | 0.1701 | 0.0181 |
+| r8, 80 steps | 8 | 80 | 0.1716 | 0.0203 |
+| r16, 40 steps | 16 | 40 | 0.1711 | 0.0185 |
+<!-- ABLATIONS:END -->
+
+**What moved quality** (PoC scale, 16 test screens — read as trends, not final):
+
+1. **Training at all is the big lever:** baseline 0.152 → distilled ~0.170
+   ROUGE-L (+12% rel.). The single biggest jump is "untrained → distilled".
+2. **More steps help marginally:** 40 → 80 steps nudges ROUGE-L 0.170 → 0.172
+   and BLEU 0.018 → 0.020 — the n-gram (BLEU) gain is clearer, i.e. longer
+   training sharpens exact phrasing.
+3. **LoRA rank is ~neutral here:** r8 vs r16 at 40 steps (0.170 vs 0.171) is
+   within noise — at this data scale adapter *capacity* isn't the bottleneck, so
+   r8 is enough.
+
+Takeaway: at small scale, *how much you distill* (steps / data) matters more
+than *adapter capacity*; the α / temperature / feature axes await the logit-KD
+path and a full-scale run.
+
+> The α / temperature / feature-alignment axes from the method section apply to
+> the **logit-level** KD variant (`models.losses.response_kd_loss`), which the
+> SFT path doesn't use yet — that's the next ablation axis once teacher logits
+> are cached.
+
 ## Configuration
 
 All hyperparameters and paths live in `configs/*.yaml`, validated by typed
