@@ -138,8 +138,12 @@ def benchmark(
     iters: int = 10,
     warmup: int = 2,
     dry_run: bool = False,
+    write_outputs: bool = True,
 ) -> dict[str, Any]:
-    """Benchmark the requested models; returns the report."""
+    """Benchmark the requested models; returns the report.
+
+    ``write_outputs=False`` skips the results/README side effects (tests).
+    """
     report: dict[str, Any] = {
         "hardware": platform.platform(),
         "iters": iters,
@@ -186,12 +190,13 @@ def benchmark(
         }
 
     _add_tradeoff(report)
-    RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "benchmark.json").write_text(
-        json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    if not dry_run:
-        _update_readme(report)
+    if write_outputs:
+        RESULTS.mkdir(parents=True, exist_ok=True)
+        (RESULTS / "benchmark.json").write_text(
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        if not dry_run:
+            _update_readme(report)
     return report
 
 

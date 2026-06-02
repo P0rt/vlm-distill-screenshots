@@ -39,6 +39,7 @@ def test_benchmark_dry_run_computes_speedup() -> None:
         models=["teacher", "student"],
         iters=5,
         dry_run=True,
+        write_outputs=False,
     )
     assert set(report["models"]) == {"teacher", "student"}
     # synthetic: teacher ~900ms, student ~250ms -> speedup > 1
@@ -55,6 +56,7 @@ def test_render_table() -> None:
         models=["teacher", "student"],
         iters=3,
         dry_run=True,
+        write_outputs=False,
     )
     table = render_table(report)
     assert "params (B)" in table

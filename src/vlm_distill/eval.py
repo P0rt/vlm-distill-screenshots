@@ -6,6 +6,10 @@ using ROUGE-L / BLEU (and an optional teacher LLM-as-judge score). Writes a
 reproducible report to ``results/eval.json`` and refreshes the README table.
 
 ``--dry-run`` scores synthetic predictions with no models (runs in CI).
+
+Note: evaluating an MLX model (teacher) and a torch/hf model (student) in the
+*same* process can conflict on Apple Silicon — run those in separate invocations
+(one ``--models teacher`` call, one ``--models student,baseline`` call).
 """
 
 from __future__ import annotations

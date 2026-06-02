@@ -24,6 +24,10 @@ data = [
     "pyarrow>=16.0",
     "huggingface-hub>=0.24",
 ]
+# Plotting for the article figures. `uv sync --extra viz`.
+viz = [
+    "matplotlib>=3.8",
+]
 # Apple Silicon inference backend (Phase 3+): teacher/student via MLX.
 # `uv sync --extra mlx`. Only installs on macOS arm64.
 mlx = [
