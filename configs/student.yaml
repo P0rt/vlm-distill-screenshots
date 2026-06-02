@@ -1,8 +1,8 @@
 # Student VLM configuration (SPEC §2).
 # Default student: Qwen2-VL-2B-Instruct, fine-tuned with LoRA (~3.5x smaller than teacher).
-# backend: mlx (Apple Silicon) | hf (CUDA). mlx_model_id is a bf16 MLX checkpoint
-# so LoRA adapters train in full precision.
-backend: mlx
+# backend: hf (transformers+peft; trains on CUDA or Apple MPS/CPU — the proven
+# path) | mlx (mlx-vlm; inference works, LoRA training blocked upstream).
+backend: hf
 model_id: Qwen/Qwen2-VL-2B-Instruct
 mlx_model_id: mlx-community/Qwen2-VL-2B-Instruct-bf16
 dtype: bfloat16

@@ -2,11 +2,12 @@
 the student learns to reproduce the teacher's text targets.
 
 Backends:
-  - ``hf`` : LoRA SFT via transformers + peft. The portable / CUDA path (SPEC §2);
-    runs on a 24GB GPU, or CPU/MPS for a smoke check.
-  - ``mlx``: LoRA SFT via mlx-vlm's trainer (Apple Silicon). NOTE: blocked on
-    mlx-vlm 0.6.0 (``Primitive::vjp not implemented for CustomKernel`` during
-    backprop); usable once that upstream gap is fixed.
+  - ``hf`` (default): LoRA SFT via transformers + peft. The working path —
+    trains on CUDA or Apple MPS / CPU (set ``PYTORCH_ENABLE_MPS_FALLBACK=1`` on
+    macOS). Verified end-to-end on an M4 Pro (loss drops, checkpoint reloads).
+  - ``mlx``: LoRA SFT via mlx-vlm's trainer (Apple Silicon). Blocked on mlx-vlm
+    0.6.0 (``Primitive::vjp not implemented for CustomKernel`` during backprop);
+    usable once that upstream gap is fixed.
 
 ``--dry-run`` validates the data -> messages wiring with no model / no heavy
 deps (runs in CI). A real run needs teacher labels first (``vlm-teacher-label``)

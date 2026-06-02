@@ -34,6 +34,7 @@ mlx = [
 ml = [
     "vlm-distill-screenshots[data]",
     "torch>=2.3",
+    "torchvision>=0.18",
     "transformers>=4.45",
     "accelerate>=0.33",
     "peft>=0.12",
@@ -106,6 +107,7 @@ module = [
     "PIL.*",
     "datasets.*",
     "transformers.*",
+    "mlx.*",
     "mlx_vlm.*",
     "peft.*",
 ]

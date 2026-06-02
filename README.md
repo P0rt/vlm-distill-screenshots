@@ -8,10 +8,10 @@ the central question is *how much quality we trade for how much speedup*. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for working
 conventions.
 
-> **Status:** Phases 1–3 complete (skeleton, data pipeline, teacher labeling).
-> Phase 4 (distillation) implemented via the `hf` backend — real training runs
-> on a 24GB GPU (the `mlx` training backend is blocked on an upstream mlx-vlm
-> gap). Phases 5–8 scaffolded.
+> **Status:** Phases 1–4 complete. Phase 4 (distillation) trains via the `hf`
+> backend on CUDA or **Apple MPS** — verified end-to-end on an M4 Pro (loss
+> drops, checkpoint reloads). The `mlx` training backend is blocked on an
+> upstream mlx-vlm gap. Phases 5–8 scaffolded.
 
 ## Models
 
@@ -147,12 +147,20 @@ Backends (set `backend` in `configs/student.yaml`):
 
 | backend | runs on | status |
 | ------- | ------- | ------ |
-| `hf`    | CUDA GPU (~24GB), or CPU/MPS smoke | transformers + peft LoRA — the path for real runs |
-| `mlx`   | Apple Silicon | mlx-vlm LoRA SFT — **blocked** on an mlx-vlm 0.6.0 backprop gap (`CustomKernel` has no vjp); inference/labeling on MLX works fine |
+| `hf` (default) | CUDA GPU, or **Apple MPS** / CPU | transformers + peft LoRA — the working train + inference path |
+| `mlx`   | Apple Silicon | mlx-vlm LoRA SFT — **blocked** on an mlx-vlm 0.6.0 backprop gap (`CustomKernel` has no vjp); MLX inference/labeling works fine |
 
 Visual tokens per screenshot are capped (`student.yaml` `max_pixels`) so large
-RICO screenshots fit the training context. Adapters are written under
-`results/checkpoints/<config_hash>/`.
+RICO screenshots fit the training context. LoRA adapters are written under
+`results/checkpoints/<config_hash>/` (peft format).
+
+<!-- DISTILL_RUN:BEGIN -->
+Proof-of-concept run on an **Apple M4 Pro (24GB), MPS**, `hf` backend, 40 steps:
+train loss **0.80 → 0.39**; the reloaded adapter generates in the trained format
+(one-sentence summary + key-element list). On macOS set
+`PYTORCH_ENABLE_MPS_FALLBACK=1`. A full distillation run is the same command on
+the complete labeled split (best on a 24GB GPU).
+<!-- DISTILL_RUN:END -->
 
 ## Configuration
 

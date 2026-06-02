@@ -77,14 +77,63 @@ class MlxStudent:
         return text.strip()
 
 
+class HfStudent:
+    """Qwen2-VL-2B via transformers, with an optional trained LoRA adapter.
+
+    Matches the ``hf`` training backend (runs on CUDA, or Apple MPS / CPU).
+    """
+
+    def __init__(self, cfg: StudentConfig, adapter_path: str | None = None) -> None:
+        import torch
+        from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
+
+        self.cfg = cfg
+        self.device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else "mps"
+            if torch.backends.mps.is_available()
+            else "cpu"
+        )
+        dtype = torch.bfloat16 if self.device in {"cuda", "mps"} else torch.float32
+        self.processor = AutoProcessor.from_pretrained(
+            cfg.model_id, min_pixels=cfg.min_pixels, max_pixels=cfg.max_pixels
+        )
+        model = Qwen2VLForConditionalGeneration.from_pretrained(cfg.model_id, torch_dtype=dtype)
+        if adapter_path:
+            from peft import PeftModel
+
+            model = PeftModel.from_pretrained(model, adapter_path)
+        self.model = model.to(self.device)
+        self.model.eval()
+
+    def describe(self, image: Image | None, prompt: str, *, max_tokens: int = 128) -> str:
+        import torch
+
+        if image is None:
+            raise ValueError("HfStudent requires an image.")
+        messages = [
+            {"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt}]}
+        ]
+        text = self.processor.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        inputs = self.processor(text=[text], images=[image], return_tensors="pt").to(self.device)
+        with torch.no_grad():
+            out = self.model.generate(**inputs, max_new_tokens=max_tokens, do_sample=False)
+        trimmed = out[:, inputs["input_ids"].shape[1] :]
+        decoded: str = self.processor.batch_decode(trimmed, skip_special_tokens=True)[0]
+        return decoded.strip()
+
+
 def make_student(
     cfg: StudentConfig, *, adapter_path: str | None = None, dry_run: bool = False
 ) -> StudentModel:
-    """Factory: dry-run stand-in or the MLX backend (with optional adapter)."""
+    """Factory: dry-run stand-in, or the mlx / hf backend (with optional adapter)."""
     if dry_run:
         return DryRunStudent()
     if cfg.backend == "mlx":
         return MlxStudent(cfg, adapter_path=adapter_path)
     if cfg.backend == "hf":
-        raise NotImplementedError("hf student backend lands with the CUDA path (SPEC).")
+        return HfStudent(cfg, adapter_path=adapter_path)
     raise ValueError(f"Unknown student backend: {cfg.backend!r}")

@@ -81,10 +81,11 @@ class StudentFallbackConfig(_StrictModel):
 class StudentConfig(_StrictModel):
     """Student VLM (default: Qwen2-VL-2B-Instruct, fine-tuned with LoRA)."""
 
-    backend: Literal["mlx", "hf"] = "mlx"
+    # hf = transformers + peft (proven train + inference, CUDA/MPS/CPU);
+    # mlx = mlx-vlm (inference works; LoRA training blocked upstream).
+    backend: Literal["mlx", "hf"] = "hf"
     model_id: str = "Qwen/Qwen2-VL-2B-Instruct"
-    # MLX checkpoint used for training/inference on Apple Silicon (bf16 so LoRA
-    # adapters train in full precision; 4-bit is for inference only).
+    # MLX checkpoint for the mlx backend (bf16 so adapters stay full precision).
     mlx_model_id: str = "mlx-community/Qwen2-VL-2B-Instruct-bf16"
     dtype: str = "bfloat16"
     # Visual token budget (pixels). Caps how many vision tokens a screenshot
