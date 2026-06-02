@@ -35,8 +35,29 @@ the key interface elements.
 
 > **Status: proof of concept.** Validated end-to-end on an Apple M4 Pro (MPS):
 > train loss 0.80 → 0.39, and the reloaded adapter generates in the trained
-> format. Full-scale training and quality/latency/memory benchmarks
-> (CIDEr / ROUGE-L + LLM-as-judge, throughput, VRAM) are tracked in the repo.
+> format. The numbers below are from a small PoC run; a full-scale run is tracked
+> in the repo.
+
+## Results (proof-of-concept)
+
+**Quality** — Screen2Words test split (16 screens), ROUGE-L / BLEU vs human refs:
+
+| model | ROUGE-L | BLEU |
+| --- | --- | --- |
+| **distilled student** | **0.178** | 0.019 |
+| untrained baseline | 0.153 | 0.018 |
+
+The distilled student beats the untrained 2B baseline on ROUGE-L (+16% rel.)
+after only a short PoC training run.
+
+**Efficiency** — teacher (7B) vs student (2B); Apple M4 Pro, MLX, 4-bit, 128 tokens:
+
+| model | params (B) | latency p50 (ms) | throughput (img/s) | peak mem (GB) |
+| --- | --- | --- | --- | --- |
+| teacher (Qwen2-VL-7B) | 8.29 | 1538 | 0.63 | 5.8 |
+| student (Qwen2-VL-2B) | 2.21 | 651 | 1.52 | 2.4 |
+
+→ **~2.4× faster, ~2.4× less memory, 3.75× fewer parameters.**
 
 ## Usage
 
