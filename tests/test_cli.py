@@ -1,8 +1,6 @@
 """Smoke tests for the CLI scaffolding.
 
-Phase 1 only guarantees the wiring: every entrypoint parses ``--help`` and,
-when invoked, raises a clear ``PhaseNotImplementedError`` pointing at the phase
-that will implement it. No heavy ML deps are imported here.
+Every entrypoint must parse ``--help`` with no heavy ML deps imported.
 """
 
 from __future__ import annotations
@@ -13,7 +11,8 @@ import pytest
 
 from vlm_distill.cli import PhaseNotImplementedError
 
-# Every entrypoint must parse --help with no heavy deps.
+# Every entrypoint must parse --help with no heavy deps. All phases (2-8) are
+# implemented now; --help still works without the ML stack.
 ALL_ENTRYPOINTS = [
     "vlm_distill.data.download",
     "vlm_distill.data.build_dataset",
@@ -21,12 +20,6 @@ ALL_ENTRYPOINTS = [
     "vlm_distill.train",
     "vlm_distill.eval",
     "vlm_distill.benchmark",
-    "vlm_distill.export",
-]
-
-# Entrypoints still scaffolded (their phase hasn't landed). Phases 2-6
-# (download, build_dataset, teacher_label, train, eval, benchmark) are implemented.
-NOT_IMPLEMENTED_ENTRYPOINTS = [
     "vlm_distill.export",
 ]
 
@@ -39,15 +32,9 @@ def test_help_exits_zero(module_name: str) -> None:
     assert exc.value.code == 0
 
 
-@pytest.mark.parametrize("module_name", NOT_IMPLEMENTED_ENTRYPOINTS)
-def test_main_raises_phase_not_implemented(module_name: str) -> None:
-    module = importlib.import_module(module_name)
-    with pytest.raises(PhaseNotImplementedError):
-        module.main([])
-
-
 def test_phase_not_implemented_carries_metadata() -> None:
-    err = PhaseNotImplementedError("some.step", phase=4)
+    # The helper is still used for documented stretch paths.
+    err = PhaseNotImplementedError("some.step", phase=7)
     assert err.step == "some.step"
-    assert err.phase == 4
-    assert "Phase 4" in str(err)
+    assert err.phase == 7
+    assert "Phase 7" in str(err)

@@ -8,12 +8,13 @@ the central question is *how much quality we trade for how much speedup*. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for working
 conventions.
 
-> **Status:** Phases 1–6 complete. Distillation (Phase 4) trains via the `hf`
+> **Status:** Phases 1–8 complete. Distillation (Phase 4) trains via the `hf`
 > backend on CUDA or **Apple MPS** (verified on an M4 Pro: loss drops, checkpoint
-> reloads); eval (Phase 5) compares student vs baseline; benchmark (Phase 6)
-> shows the 2B student ~2.4× faster and ~2.4× lighter than the 7B teacher. The
-> `mlx` training backend is blocked on an upstream mlx-vlm gap. Phases 7–8
-> scaffolded.
+> reloads); eval (Phase 5) + ablations (Phase 7) compare student vs baseline;
+> benchmark (Phase 6) shows the 2B student ~2.4× faster and ~2.4× lighter than
+> the 7B teacher; export (Phase 8) merges the LoRA into a standalone student, and
+> the write-up lives in [`article/draft.md`](article/draft.md). The `mlx`
+> *training* backend is blocked on an upstream mlx-vlm gap (inference works).
 
 ## Models
 
@@ -90,7 +91,7 @@ uv run vlm-teacher-label     # Phase 3  — teacher targets (+ optional top-k lo
 uv run vlm-train             # Phase 4  — distillation (LoRA + accelerate), --dry-run for CPU
 uv run vlm-eval              # Phase 5  — ROUGE-L / BLEU + optional LLM-as-judge
 uv run vlm-benchmark         # Phase 6  — latency / throughput / peak memory
-uv run vlm-export            # Phase 8  — ONNX export + sanity check
+uv run vlm-export            # Phase 8  — merge LoRA -> standalone student (ONNX = stretch)
 ```
 
 ## Teacher labeling (Phase 3)
@@ -253,6 +254,26 @@ path and a full-scale run.
 > the **logit-level** KD variant (`models.losses.response_kd_loss`), which the
 > SFT path doesn't use yet — that's the next ablation axis once teacher logits
 > are cached.
+
+## Export (Phase 8)
+
+Merge the LoRA adapter into the base weights and save a **standalone** student
+(model + processor) that loads anywhere with plain `transformers` — no `peft` at
+inference. A sanity generation confirms the merged model works.
+
+```bash
+uv run vlm-export --adapter results/checkpoints/<hash> --output results/exports/student
+uv run vlm-export --dry-run        # manifest only, no model (CI)
+```
+
+Full-VLM **ONNX** export is finicky and kept as a documented stretch goal; torch
+/ MLX inference is the canonical path.
+
+## Article
+
+The end-to-end write-up (motivation → method → experiments → trade-off →
+ablations → inference engineering → honest limitations) is drafted in
+[`article/draft.md`](article/draft.md), ready for dev.to.
 
 ## Configuration
 
