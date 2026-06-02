@@ -8,11 +8,12 @@ the central question is *how much quality we trade for how much speedup*. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for working
 conventions.
 
-> **Status:** Phases 1–5 complete. Distillation (Phase 4) trains via the `hf`
-> backend on CUDA or **Apple MPS** — verified end-to-end on an M4 Pro (loss
-> drops, checkpoint reloads); eval (Phase 5) compares student vs baseline on the
-> test split. The `mlx` training backend is blocked on an upstream mlx-vlm gap.
-> Phases 6–8 scaffolded.
+> **Status:** Phases 1–6 complete. Distillation (Phase 4) trains via the `hf`
+> backend on CUDA or **Apple MPS** (verified on an M4 Pro: loss drops, checkpoint
+> reloads); eval (Phase 5) compares student vs baseline; benchmark (Phase 6)
+> shows the 2B student ~2.4× faster and ~2.4× lighter than the 7B teacher. The
+> `mlx` training backend is blocked on an upstream mlx-vlm gap. Phases 7–8
+> scaffolded.
 
 ## Models
 
@@ -88,7 +89,7 @@ uv run vlm-build-dataset     # Phase 2  — unified {image, prompt, target} + sp
 uv run vlm-teacher-label     # Phase 3  — teacher targets (+ optional top-k logits)
 uv run vlm-train             # Phase 4  — distillation (LoRA + accelerate), --dry-run for CPU
 uv run vlm-eval              # Phase 5  — ROUGE-L / BLEU + optional LLM-as-judge
-uv run vlm-benchmark         # Phase 6  — latency / throughput / peak VRAM
+uv run vlm-benchmark         # Phase 6  — latency / throughput / peak memory
 uv run vlm-export            # Phase 8  — ONNX export + sanity check
 ```
 
@@ -183,6 +184,36 @@ Report is written to `results/eval.json`; the table below is auto-filled.
 | student | 0.1776 | 0.0188 |
 | baseline | 0.1529 | 0.0180 |
 <!-- EVAL_TABLE:END -->
+
+## Benchmark & trade-off (Phase 6)
+
+Inference cost on the same hardware: per-image latency (p50/p95), throughput,
+peak memory, and the parameter ratio. The headline trade-off is **how much speed
+/ memory the 2B student buys for how little quality lost** vs the 7B teacher.
+
+```bash
+uv run vlm-benchmark --dry-run                      # synthetic timings (CI)
+uv run vlm-benchmark --models teacher,student --iters 10
+```
+
+> On Apple Silicon "peak memory" is unified-memory RSS, not CUDA VRAM. For a fair
+> same-runtime speedup we benchmark both models on MLX.
+
+<!-- BENCH_TABLE:BEGIN -->
+| model | params (B) | latency p50 (ms) | p95 (ms) | throughput (img/s) | peak mem (GB) |
+| --- | --- | --- | --- | --- | --- |
+| teacher | 8.29 | 1538 | 1658 | 0.63 | 5.8 |
+| student | 2.21 | 651 | 678 | 1.52 | 2.4 |
+
+Student vs teacher: **2.36x faster** (p50), **3.75x fewer params**.
+<!-- BENCH_TABLE:END -->
+
+**Trade-off conclusion (M4 Pro, MLX, 4-bit, 128 tokens):** the 2B student runs
+at **~2.4× the teacher's speed** (1.52 vs 0.63 img/s) in **~2.4× less memory**
+(2.4 vs 5.8 GB) with **3.75× fewer parameters** — while still beating the
+untrained baseline on ROUGE-L (Phase 5). The quality-vs-speed curve will tighten
+with a full training run; the honest read is that distillation already buys a
+real efficiency win at a modest, measurable quality cost.
 
 ## Configuration
 
