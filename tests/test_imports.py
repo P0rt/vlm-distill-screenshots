@@ -21,6 +21,7 @@ MODULES = [
     "vlm_distill.models.teacher",
     "vlm_distill.models.student",
     "vlm_distill.models.losses",
+    "vlm_distill.metrics",
     "vlm_distill.train",
     "vlm_distill.eval",
     "vlm_distill.benchmark",

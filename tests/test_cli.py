@@ -24,10 +24,9 @@ ALL_ENTRYPOINTS = [
     "vlm_distill.export",
 ]
 
-# Entrypoints still scaffolded (their phase hasn't landed). Phases 2-4
-# (download, build_dataset, teacher_label, train) are implemented.
+# Entrypoints still scaffolded (their phase hasn't landed). Phases 2-5
+# (download, build_dataset, teacher_label, train, eval) are implemented.
 NOT_IMPLEMENTED_ENTRYPOINTS = [
-    "vlm_distill.eval",
     "vlm_distill.benchmark",
     "vlm_distill.export",
 ]

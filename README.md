@@ -8,10 +8,11 @@ the central question is *how much quality we trade for how much speedup*. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for working
 conventions.
 
-> **Status:** Phases 1–4 complete. Phase 4 (distillation) trains via the `hf`
+> **Status:** Phases 1–5 complete. Distillation (Phase 4) trains via the `hf`
 > backend on CUDA or **Apple MPS** — verified end-to-end on an M4 Pro (loss
-> drops, checkpoint reloads). The `mlx` training backend is blocked on an
-> upstream mlx-vlm gap. Phases 5–8 scaffolded.
+> drops, checkpoint reloads); eval (Phase 5) compares student vs baseline on the
+> test split. The `mlx` training backend is blocked on an upstream mlx-vlm gap.
+> Phases 6–8 scaffolded.
 
 ## Models
 
@@ -86,7 +87,7 @@ uv run vlm-download          # Phase 2  — Screen2Words + RICO
 uv run vlm-build-dataset     # Phase 2  — unified {image, prompt, target} + split
 uv run vlm-teacher-label     # Phase 3  — teacher targets (+ optional top-k logits)
 uv run vlm-train             # Phase 4  — distillation (LoRA + accelerate), --dry-run for CPU
-uv run vlm-eval              # Phase 5  — CIDEr / ROUGE-L / BLEU + LLM-as-judge
+uv run vlm-eval              # Phase 5  — ROUGE-L / BLEU + optional LLM-as-judge
 uv run vlm-benchmark         # Phase 6  — latency / throughput / peak VRAM
 uv run vlm-export            # Phase 8  — ONNX export + sanity check
 ```
@@ -161,6 +162,27 @@ train loss **0.80 → 0.39**; the reloaded adapter generates in the trained form
 `PYTORCH_ENABLE_MPS_FALLBACK=1`. A full distillation run is the same command on
 the complete labeled split (best on a 24GB GPU).
 <!-- DISTILL_RUN:END -->
+
+## Evaluation (Phase 5)
+
+Task quality on the Screen2Words **test** split vs. the human reference captions
+(ROUGE-L / BLEU; optional teacher LLM-as-judge). Compares the distilled student,
+an untrained baseline (same base, no adapter), and optionally the teacher.
+
+```bash
+uv run vlm-eval --dry-run                                   # synthetic, no models (CI)
+uv run vlm-eval --models student,baseline --adapter <dir> --limit 100
+uv run vlm-eval --models student,baseline,teacher --judge --limit 50
+```
+
+Report is written to `results/eval.json`; the table below is auto-filled.
+
+<!-- EVAL_TABLE:BEGIN -->
+| model | ROUGE-L | BLEU |
+| --- | --- | --- |
+| student | 0.1776 | 0.0188 |
+| baseline | 0.1529 | 0.0180 |
+<!-- EVAL_TABLE:END -->
 
 ## Configuration
 
